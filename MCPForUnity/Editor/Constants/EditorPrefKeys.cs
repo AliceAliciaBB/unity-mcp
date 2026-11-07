@@ -6,24 +6,46 @@ namespace MCPForUnity.Editor.Constants
     /// </summary>
     internal static class EditorPrefKeys
     {
+        // PATCH (per-project): EditorPrefs is shared by every Unity project of the OS user, so port/server
+        // keys are suffixed with a hash of the project root. This lets several projects run MCP servers
+        // side by side. Directory.GetCurrentDirectory() is thread-safe (Application.dataPath is not).
+        internal static readonly string ProjectSuffix = ComputeProjectSuffix();
+
+        private static string ComputeProjectSuffix()
+        {
+            try
+            {
+                string root = System.IO.Directory.GetCurrentDirectory().Replace('\\', '/').TrimEnd('/').ToLowerInvariant();
+                using (var sha = System.Security.Cryptography.SHA1.Create())
+                {
+                    byte[] h = sha.ComputeHash(System.Text.Encoding.UTF8.GetBytes(root));
+                    return "." + System.BitConverter.ToString(h, 0, 4).Replace("-", "").ToLowerInvariant();
+                }
+            }
+            catch
+            {
+                return string.Empty;
+            }
+        }
+
         internal const string UseHttpTransport = "MCPForUnity.UseHttpTransport";
         internal const string HttpTransportScope = "MCPForUnity.HttpTransportScope"; // "local" | "remote"
-        internal const string LastLocalHttpServerPid = "MCPForUnity.LocalHttpServer.LastPid";
-        internal const string LastLocalHttpServerPort = "MCPForUnity.LocalHttpServer.LastPort";
-        internal const string LastLocalHttpServerStartedUtc = "MCPForUnity.LocalHttpServer.LastStartedUtc";
-        internal const string LastLocalHttpServerPidArgsHash = "MCPForUnity.LocalHttpServer.LastPidArgsHash";
-        internal const string LastLocalHttpServerPidFilePath = "MCPForUnity.LocalHttpServer.LastPidFilePath";
-        internal const string LastLocalHttpServerInstanceToken = "MCPForUnity.LocalHttpServer.LastInstanceToken";
+        internal static readonly string LastLocalHttpServerPid = "MCPForUnity.LocalHttpServer.LastPid" + ProjectSuffix;
+        internal static readonly string LastLocalHttpServerPort = "MCPForUnity.LocalHttpServer.LastPort" + ProjectSuffix;
+        internal static readonly string LastLocalHttpServerStartedUtc = "MCPForUnity.LocalHttpServer.LastStartedUtc" + ProjectSuffix;
+        internal static readonly string LastLocalHttpServerPidArgsHash = "MCPForUnity.LocalHttpServer.LastPidArgsHash" + ProjectSuffix;
+        internal static readonly string LastLocalHttpServerPidFilePath = "MCPForUnity.LocalHttpServer.LastPidFilePath" + ProjectSuffix;
+        internal static readonly string LastLocalHttpServerInstanceToken = "MCPForUnity.LocalHttpServer.LastInstanceToken" + ProjectSuffix;
         internal const string DebugLogs = "MCPForUnity.DebugLogs";
         internal const string ValidationLevel = "MCPForUnity.ValidationLevel";
-        internal const string UnitySocketPort = "MCPForUnity.UnitySocketPort";
+        internal static readonly string UnitySocketPort = "MCPForUnity.UnitySocketPort" + ProjectSuffix;
         internal const string ResumeStdioAfterReload = "MCPForUnity.ResumeStdioAfterReload";
 
         internal const string UvxPathOverride = "MCPForUnity.UvxPath";
         internal const string ClaudeCliPathOverride = "MCPForUnity.ClaudeCliPath";
         internal const string ClientProjectDirOverride = "MCPForUnity.ClientProjectDir";
 
-        internal const string HttpBaseUrl = "MCPForUnity.HttpUrl";
+        internal static readonly string HttpBaseUrl = "MCPForUnity.HttpUrl" + ProjectSuffix;
         internal const string HttpRemoteBaseUrl = "MCPForUnity.HttpRemoteUrl";
         internal const string SessionId = "MCPForUnity.SessionId";
         internal const string WebSocketUrlOverride = "MCPForUnity.WebSocketUrl";
